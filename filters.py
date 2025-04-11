@@ -245,8 +245,8 @@ def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
 #         return apply_high_pass_filter(image_array, cutoff)
 
 
-def apply_high_pass_filter(image_array, cutoff=0.1):
-    """Apply High-pass filter to an image (grayscale or RGB)."""
+def high_pass_filter_frequency(image_array, cutoff=0.1):
+
     def filter_channel(image_channel):
         f_transform = np.fft.fft2(image_channel)
         f_shifted = np.fft.fftshift(f_transform)
