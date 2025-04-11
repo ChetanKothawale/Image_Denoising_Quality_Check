@@ -3,7 +3,8 @@ import numpy as np
 from PIL import Image
 import statistics
 import math
-
+from scipy.ndimage import convolve
+from scipy.fft import dctn, idctn 
 
 def gaussian_kernel(size, sigma=1):
     """Generate a Gaussian kernel."""
@@ -185,3 +186,60 @@ def bilateral_filter_color(image, d, sigma_s, sigma_r):
                 filtered_image[i, j] = image[i, j]
 
     return np.clip(filtered_image, 0, 255).astype(np.uint8)
+
+
+
+def mean_filter(image_array, kernel_size=7):
+    """Apply a mean filter for denoising using convolution."""
+    kernel = np.ones((kernel_size, kernel_size)) / (kernel_size ** 2)
+    filtered_image = np.zeros_like(image_array, dtype=float)
+    
+    for c in range(image_array.shape[2]):
+        filtered_image[..., c] = convolve(image_array[..., c].astype(float), kernel, mode='reflect')
+    
+    return np.clip(filtered_image, 0, 255).astype(np.uint8)
+
+
+
+def anscombe_transform(img):
+    return 2 * np.sqrt(img + 3/8)
+
+def inverse_anscombe_transform(img):
+    return (img / 2) ** 2 - 3/8
+
+def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
+    """Simplified BM3D denoising for Poisson noise."""
+    img = np.clip(img, 0, None)
+    transformed_img = anscombe_transform(img)
+    coeffs = dctn(transformed_img, norm='ortho')
+    threshold = 2.7 * sigma
+    coeffs[np.abs(coeffs) < threshold] = 0
+    denoised_transformed = idctn(coeffs, norm='ortho')
+    denoised_img = inverse_anscombe_transform(denoised_transformed)
+
+
+# === High-Pass Filter ===
+def apply_high_pass_filter(image_channel, cutoff):
+    """Apply High-pass filter to a single channel."""
+    f_transform = np.fft.fft2(image_channel)
+    f_shifted = np.fft.fftshift(f_transform)
+    rows, cols = image_channel.shape
+    r = np.fft.fftfreq(rows)
+    c = np.fft.fftfreq(cols)
+    r, c = np.meshgrid(r, c)
+    mask = np.sqrt(r**2 + c**2) > cutoff
+    f_shifted *= mask
+    f_ishifted = np.fft.ifftshift(f_shifted)
+    filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
+
+    return np.clip(filtered_channel, 0, 255).astype(np.uint8)
+
+def high_pass_filter_frequency(image_array, cutoff=0.1):
+    """Apply high-pass filter to each channel separately (R, G, B)."""
+    if len(image_array.shape) == 3:
+        r_filtered = apply_high_pass_filter(image_array[:, :, 0], cutoff)
+        g_filtered = apply_high_pass_filter(image_array[:, :, 1], cutoff)
+        b_filtered = apply_high_pass_filter(image_array[:, :, 2], cutoff)
+        return np.stack((r_filtered, g_filtered, b_filtered), axis=-1)
+    else:
+        return apply_high_pass_filter(image_array, cutoff)
