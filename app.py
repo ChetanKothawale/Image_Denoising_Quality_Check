@@ -5,10 +5,53 @@ import torch
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter, mean_filter, bm3d_denoise_poisson, high_pass_filter_frequency
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
 
-# Set up Streamlit UI
-st.title("Denoising the Images with Deep Learning & Traditional Filters")
 
-uploaded_file = st.file_uploader("Upload a Noisy Image", type=["png", "jpg", "jpeg"])
+st.title("Image Denoising Evaluation with Streamlit")
+
+# File uploaders for both original and noisy images
+col1, col2 = st.columns(2)
+with col1:
+    original_file = st.file_uploader("Upload Original Clean Image", type=["png", "jpg", "jpeg"])
+with col2:
+    noisy_file = st.file_uploader("Upload Noisy Image", type=["png", "jpg", "jpeg"])
+
+if original_file and noisy_file:
+    original_image = imageio.imread(original_file)
+    noisy_image = imageio.imread(noisy_file)
+    
+    # Convert grayscale to RGB if needed
+    if original_image.ndim == 2:
+        original_image = np.stack([original_image] * 3, axis=-1)
+    if noisy_image.ndim == 2:
+        noisy_image = np.stack([noisy_image] * 3, axis=-1)
+    
+    # Display original and noisy images
+    st.subheader("Input Images")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(original_image, caption="Original Clean Image", use_column_width=True)
+    with col2:
+        st.image(noisy_image, caption="Noisy Image", use_column_width=True)
+    
+    # Calculate metrics between original and noisy image
+    st.subheader("Noise Level Metrics")
+    if original_image.shape == noisy_image.shape:
+        try:
+            noisy_psnr = psnr(original_image, noisy_image, data_range=255)
+            noisy_ssim = ssim(
+                np.mean(original_image, axis=2) if original_image.ndim == 3 else original_image,
+                np.mean(noisy_image, axis=2) if noisy_image.ndim == 3 else noisy_image,
+                data_range=255
+            )
+            st.write(f"PSNR (Original vs Noisy): {noisy_psnr:.2f} dB")
+            st.write(f"SSIM (Original vs Noisy): {noisy_ssim:.4f}")
+        except ValueError as e:
+            st.warning(f"Could not calculate noise level metrics: {e}")
+    else:
+        st.warning("Original and noisy images must have the same dimensions for comparison")
+
+
+
 
 # Load Deep Learning Models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -21,14 +64,6 @@ try:
 except Exception as e:
     st.error(f"Error loading GAN model: {e}")
 
-
-if uploaded_file:
-    noisy_image = imageio.imread(uploaded_file)
-
-    if noisy_image.ndim == 2:
-        noisy_image = np.stack([noisy_image] * 3, axis=-1)
-
-    st.image(noisy_image, caption="Noisy Image", use_column_width=True)
 
     denoise_choice = st.selectbox(
         "Choose a Denoising Method",
