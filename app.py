@@ -52,20 +52,17 @@ if original_file and noisy_file:
             st.warning(f"Could not calculate noise level metrics: {e}")
     else:
         st.warning("Original and noisy images must have the same dimensions for comparison")
-
-
-
-
-# Load Deep Learning Models
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Load GAN model
-gan_model_path = "generator_model.pth"
-try:
-    gan_model = load_gan_model(gan_model_path)
-    st.success("GAN Model Loaded Successfully")
-except Exception as e:
-    st.error(f"Error loading GAN model: {e}")
+  
+    # Load Deep Learning Models
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    # Load GAN model
+    gan_model_path = "generator_model.pth"
+    try:
+        gan_model = load_gan_model(gan_model_path)
+        st.success("GAN Model Loaded Successfully")
+    except Exception as e:
+        st.error(f"Error loading GAN model: {e}")
 
 
     denoise_choice = st.selectbox(
