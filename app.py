@@ -3,7 +3,6 @@ import numpy as np
 import imageio
 import torch
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter, mean_filter, high_pass_filter_frequency
-from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
@@ -20,13 +19,7 @@ with col2:
 # Load Deep Learning Models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Load GAN model
-gan_model_path = "generator_model.pth"
-try:
-    gan_model = load_gan_model(gan_model_path)
-    st.success("GAN Model Loaded Successfully")
-except Exception as e:
-    st.error(f"Error loading GAN model: {e}")
+
 
 if original_file and noisy_file:
     original_image = imageio.imread(original_file)
@@ -74,8 +67,8 @@ if original_file and noisy_file:
             "Bilateral Filter",
             "Gaussian Filter",
             "Mean Filter",
-            "High-Pass Filter",
-            "GAN-Based Denoising"
+            "High-Pass Filter"
+
         ],
     )
 
@@ -120,19 +113,6 @@ if original_file and noisy_file:
         if st.button("Denoise Image"):
             filtered_image = high_pass_filter_frequency(noisy_image, cutoff)
 
-    elif denoise_choice == "GAN-Based Denoising":
-        if st.button("Denoise Image"):
-            try:
-                noisy_tensor = preprocess_image(noisy_file)
-                denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-                # filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
-                # filtered_image = (filtered_image * 255).astype(np.uint8)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                filtered_image = noisy_image
-    
-    
-                
     # Display results
     if "filtered_image" in locals():
         st.subheader("Denoising Results")
