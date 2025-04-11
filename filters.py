@@ -219,48 +219,48 @@ def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
 
 
 # === High-Pass Filter ===
-def apply_high_pass_filter(image_channel, cutoff):
-    """Apply High-pass filter to a single channel."""
-    f_transform = np.fft.fft2(image_channel)
-    f_shifted = np.fft.fftshift(f_transform)
-    rows, cols = image_channel.shape
-    r = np.fft.fftfreq(rows)
-    c = np.fft.fftfreq(cols)
-    r, c = np.meshgrid(r, c)
-    mask = np.sqrt(r**2 + c**2) > cutoff
-    f_shifted *= mask
-    f_ishifted = np.fft.ifftshift(f_shifted)
-    filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
+# def apply_high_pass_filter(image_channel, cutoff):
+#     """Apply High-pass filter to a single channel."""
+#     f_transform = np.fft.fft2(image_channel)
+#     f_shifted = np.fft.fftshift(f_transform)
+#     rows, cols = image_channel.shape
+#     r = np.fft.fftfreq(rows)
+#     c = np.fft.fftfreq(cols)
+#     r, c = np.meshgrid(r, c)
+#     mask = np.sqrt(r**2 + c**2) > cutoff
+#     f_shifted *= mask
+#     f_ishifted = np.fft.ifftshift(f_shifted)
+#     filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
 
-    return np.clip(filtered_channel, 0, 255).astype(np.uint8)
+#     return np.clip(filtered_channel, 0, 255).astype(np.uint8)
 
-def high_pass_filter_frequency(image_array, cutoff=0.1):
-    """Apply high-pass filter to each channel separately (R, G, B)."""
-    if len(image_array.shape) == 3:
-        r_filtered = apply_high_pass_filter(image_array[:, :, 0], cutoff)
-        g_filtered = apply_high_pass_filter(image_array[:, :, 1], cutoff)
-        b_filtered = apply_high_pass_filter(image_array[:, :, 2], cutoff)
-        return np.stack((r_filtered, g_filtered, b_filtered), axis=-1)
-    else:
-        return apply_high_pass_filter(image_array, cutoff)
+# def high_pass_filter_frequency(image_array, cutoff=0.1):
+#     """Apply high-pass filter to each channel separately (R, G, B)."""
+#     if len(image_array.shape) == 3:
+#         r_filtered = apply_high_pass_filter(image_array[:, :, 0], cutoff)
+#         g_filtered = apply_high_pass_filter(image_array[:, :, 1], cutoff)
+#         b_filtered = apply_high_pass_filter(image_array[:, :, 2], cutoff)
+#         return np.stack((r_filtered, g_filtered, b_filtered), axis=-1)
+#     else:
+#         return apply_high_pass_filter(image_array, cutoff)
 
 
-# def apply_high_pass_filter(image_array, cutoff=0.1):
-#     """Apply High-pass filter to an image (grayscale or RGB)."""
-#     def filter_channel(image_channel):
-#         f_transform = np.fft.fft2(image_channel)
-#         f_shifted = np.fft.fftshift(f_transform)
-#         rows, cols = image_channel.shape
-#         r = np.fft.fftfreq(rows)
-#         c = np.fft.fftfreq(cols)
-#         r, c = np.meshgrid(r, c)
-#         mask = np.sqrt(r**2 + c**2) > cutoff
-#         f_shifted *= mask
-#         f_ishifted = np.fft.ifftshift(f_shifted)
-#         filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
-#         return np.clip(filtered_channel, 0, 255).astype(np.uint8)
+def apply_high_pass_filter(image_array, cutoff=0.1):
+    """Apply High-pass filter to an image (grayscale or RGB)."""
+    def filter_channel(image_channel):
+        f_transform = np.fft.fft2(image_channel)
+        f_shifted = np.fft.fftshift(f_transform)
+        rows, cols = image_channel.shape
+        r = np.fft.fftfreq(rows)
+        c = np.fft.fftfreq(cols)
+        r, c = np.meshgrid(r, c)
+        mask = np.sqrt(r**2 + c**2) > cutoff
+        f_shifted *= mask
+        f_ishifted = np.fft.ifftshift(f_shifted)
+        filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
+        return np.clip(filtered_channel, 0, 255).astype(np.uint8)
     
-#     if len(image_array.shape) == 3:  # RGB Image
-#         return np.stack([filter_channel(image_array[:, :, i]) for i in range(3)], axis=-1)
-#     else:  # Grayscale Image
-#         return filter_channel(image_array)
+    if len(image_array.shape) == 3:  # RGB Image
+        return np.stack([filter_channel(image_array[:, :, i]) for i in range(3)], axis=-1)
+    else:  # Grayscale Image
+        return filter_channel(image_array)
