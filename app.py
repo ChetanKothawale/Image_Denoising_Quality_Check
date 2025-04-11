@@ -120,16 +120,26 @@ if original_file and noisy_file:
         if st.button("Denoise Image"):
             filtered_image = high_pass_filter_frequency(noisy_image, cutoff)
 
+    # elif denoise_choice == "GAN-Based Denoising":
+    #     if st.button("Denoise Image"):
+    #         try:
+    #             noisy_tensor = preprocess_image(noisy_file)
+    #             denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
+    #             filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
+    #             filtered_image = (filtered_image * 255).astype(np.uint8)
+    #         except Exception as e:
+    #             st.error(f"Error: {e}")
+    #             filtered_image = noisy_image
+
     elif denoise_choice == "GAN-Based Denoising":
-        if st.button("Denoise Image"):
-            try:
-                noisy_tensor = preprocess_image(noisy_file)
-                denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-                filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
-                filtered_image = (filtered_image * 255).astype(np.uint8)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                filtered_image = noisy_image
+    if st.button("Denoise Image"):
+        try:
+            noisy_tensor = preprocess_image(noisy_image)  # Convert to tensor
+            denoised_image = denoise_image_gan(gan_model, noisy_tensor)  # Apply GAN model
+        except Exception as e:
+            st.error(f"Error: {e}")
+            denoised_image = noisy_image  # Fallback to original if error
+
                 
     # Display results
     if "filtered_image" in locals():
