@@ -7,8 +7,6 @@ from gan_model import load_gan_model, preprocess_image, denoise_image as gan_den
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
-
-
 st.title("Image Denoising Evaluation with Streamlit")
 
 # File uploaders for both original and noisy images
@@ -64,7 +62,6 @@ if original_file and noisy_file:
     except Exception as e:
         st.error(f"Error loading GAN model: {e}")
 
-
     denoise_choice = st.selectbox(
         "Choose a Denoising Method",
         [
@@ -77,14 +74,13 @@ if original_file and noisy_file:
             "BM3D Poisson Noise Reduction",
             "High-Pass Filter",
             "GAN-Based Denoising"
-           
         ],
     )
 
     if denoise_choice == "Butterworth Low-Pass":
         cutoff = st.slider("Cutoff Frequency", min_value=10, max_value=200, value=60)
         if st.button("Denoise Image"):
-            denoised_image = butterworth_lowpass_filter(noisy_image, cutoff)
+            filtered_image = butterworth_lowpass_filter(noisy_image, cutoff)
 
     elif denoise_choice == "Anisotropic Diffusion":
         iterations = st.slider("Iterations", min_value=5, max_value=50, value=20)
@@ -92,51 +88,52 @@ if original_file and noisy_file:
         gamma = st.slider("Gamma", min_value=0.05, max_value=0.5, value=0.2)
         option = st.radio("Diffusion Function", [1, 2])
         if st.button("Denoise Image"):
-            denoised_image = anisotropic_diffusion(noisy_image, iterations, kappa, gamma, option)
+            filtered_image = anisotropic_diffusion(noisy_image, iterations, kappa, gamma, option)
 
     elif denoise_choice == "Median Filter":
         filter_size = st.slider("Filter Size", min_value=3, max_value=15, value=5, step=2)
         if st.button("Denoise Image"):
-            denoised_image = median_filter(noisy_image, filter_size)
+            filtered_image = median_filter(noisy_image, filter_size)
 
     elif denoise_choice == "Bilateral Filter":
         d = st.slider("Filter Window Size", min_value=3, max_value=15, value=9, step=2)
         sigma_s = st.slider("Spatial Sigma", min_value=1, max_value=50, value=10)
         sigma_r = st.slider("Range Sigma", min_value=1, max_value=100, value=25)
         if st.button("Denoise Image"):
-            denoised_image = bilateral_filter_color(noisy_image, d, sigma_s, sigma_r)
+            filtered_image = bilateral_filter_color(noisy_image, d, sigma_s, sigma_r)
 
     elif denoise_choice == "Gaussian Filter":
         filter_size = st.slider("Filter Size", min_value=3, max_value=15, value=3, step=2)
         sigma = st.slider("Sigma Value", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
         if st.button("Denoise Image"):
-            denoised_image = gaussian_filter(noisy_image, filter_size, sigma)
+            filtered_image = gaussian_filter(noisy_image, filter_size, sigma)
 
     elif denoise_choice == "Mean Filter":
         kernel_size = st.slider("Kernel Size", min_value=3, max_value=15, value=7, step=2)
         if st.button("Denoise Image"):
-            denoised_image = mean_filter(noisy_image, kernel_size)
+            filtered_image = mean_filter(noisy_image, kernel_size)
 
-    elif filter_choice == "BM3D Poisson Noise Reduction":
+    elif denoise_choice == "BM3D Poisson Noise Reduction":
         sigma = st.slider("Noise Level (σ)", min_value=0.05, max_value=1.0, value=0.1)
-        if st.button("Apply Filter"):
-            filtered_image = bm3d_denoise_poisson(image, sigma)
+        if st.button("Denoise Image"):
+            filtered_image = bm3d_denoise_poisson(noisy_image, sigma)
 
-    elif filter_choice == "High-Pass Filter":
+    elif denoise_choice == "High-Pass Filter":
         cutoff = st.slider("Cutoff Frequency", min_value=0.1, max_value=1.0, value=0.4)
-        if st.button("Apply Filter"):
-            filtered_image = high_pass_filter_frequency(image, cutoff)
+        if st.button("Denoise Image"):
+            filtered_image = high_pass_filter_frequency(noisy_image, cutoff)
 
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
             try:
-                noisy_tensor = preprocess_image(uploaded_file)
-                denoised_image = gan_denoise_image(gan_model, noisy_tensor)
+                noisy_tensor = preprocess_image(noisy_file)
+                denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
+                filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
+                filtered_image = (filtered_image * 255).astype(np.uint8)
             except Exception as e:
                 st.error(f"Error: {e}")
-                denoised_image = noisy_image
-
-
+                filtered_image = noisy_image
+                
     # Display results
     if "filtered_image" in locals():
         st.subheader("Denoising Results")
