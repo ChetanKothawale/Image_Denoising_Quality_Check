@@ -120,58 +120,18 @@ if original_file and noisy_file:
         if st.button("Denoise Image"):
             filtered_image = high_pass_filter_frequency(noisy_image, cutoff)
 
-    # elif denoise_choice == "GAN-Based Denoising":
-    #     if st.button("Denoise Image"):
-    #         try:
-    #             noisy_tensor = preprocess_image(noisy_file)
-    #             denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-    #             filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
-    #             filtered_image = (filtered_image * 255).astype(np.uint8)
-    #         except Exception as e:
-    #             st.error(f"Error: {e}")
-    #             filtered_image = noisy_image
-    
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
             try:
-                # Preprocess the noisy image
                 noisy_tensor = preprocess_image(noisy_file)
-                
-                # Denoise using GAN
-                with torch.no_grad():
-                    denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-                
-                # Initialize filtered_image
-                filtered_image = None
-                
-                # Convert tensor to numpy array
-                if torch.is_tensor(denoised_tensor):
-                    # Move to CPU if needed
-                    if denoised_tensor.is_cuda:
-                        denoised_tensor = denoised_tensor.cpu()
-                    
-                    # Convert to numpy
-                    denoised_array = denoised_tensor.numpy()
-                    
-                    # Handle different tensor formats
-                    if denoised_array.ndim == 4:  # batch dimension (NCHW)
-                        denoised_array = denoised_array[0]  # take first image
-                    
-                    if denoised_array.shape[0] in [1, 3]:  # CHW format
-                        denoised_array = denoised_array.transpose(1, 2, 0)  # to HWC
-                    
-                    # Scale to 0-255 if needed
-                    if denoised_array.max() <= 1.0:
-                        filtered_image = (denoised_array * 255).clip(0, 255).astype(np.uint8)
-                    else:
-                        filtered_image = denoised_array.clip(0, 255).astype(np.uint8)
-                
-                if filtered_image is None:
-                    raise ValueError("Failed to process GAN output")
-                    
+                denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
+                # filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
+                # filtered_image = (filtered_image * 255).astype(np.uint8)
             except Exception as e:
-                st.error(f"Error during GAN denoising: {str(e)}")
-                filtered_image = noisy_image  # fallback to original noisy image
+                st.error(f"Error: {e}")
+                filtered_image = noisy_image
+    
+    
                 
     # Display results
     if "filtered_image" in locals():
