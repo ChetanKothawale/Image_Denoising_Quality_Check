@@ -132,13 +132,13 @@ if original_file and noisy_file:
     #             filtered_image = noisy_image
 
     elif denoise_choice == "GAN-Based Denoising":
-    if st.button("Denoise Image"):
-        try:
-            noisy_tensor = preprocess_image(noisy_image)  # Convert to tensor
-            denoised_image = denoise_image_gan(gan_model, noisy_tensor)  # Apply GAN model
-        except Exception as e:
-            st.error(f"Error: {e}")
-            denoised_image = noisy_image  # Fallback to original if error
+        if st.button("Denoise Image"):
+            try:
+                noisy_tensor = preprocess_image(noisy_image)  # Convert to tensor
+                denoised_image = denoise_image_gan(gan_model, noisy_tensor)  # Apply GAN model
+            except Exception as e:
+                st.error(f"Error: {e}")
+                denoised_image = noisy_image  # Fallback to original if error
 
                 
     # Display results
