@@ -201,23 +201,6 @@ def mean_filter(image_array, kernel_size=7):
 
 
 
-def anscombe_transform(img):
-    return 2 * np.sqrt(img + 3/8)
-
-def inverse_anscombe_transform(img):
-    return (img / 2) ** 2 - 3/8
-
-def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
-    """Simplified BM3D denoising for Poisson noise."""
-    img = np.clip(img, 0, None)
-    transformed_img = anscombe_transform(img)
-    coeffs = dctn(transformed_img, norm='ortho')
-    threshold = 2.7 * sigma
-    coeffs[np.abs(coeffs) < threshold] = 0
-    denoised_transformed = idctn(coeffs, norm='ortho')
-    denoised_img = inverse_anscombe_transform(denoised_transformed)
-
-
 # === High-Pass Filter ===
 def high_pass_filter_frequency(image_array, cutoff=0.1):
 
