@@ -130,17 +130,17 @@ if original_file and noisy_file:
     #         except Exception as e:
     #             st.error(f"Error: {e}")
     #             filtered_image = noisy_image
-
-
+    
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
             try:
                 noisy_tensor = preprocess_image(noisy_file)
-                denoised_image = gan_denoise_image(gan_model, noisy_tensor)
+                denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
+                filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
+                filtered_image = (filtered_image * 255).astype(np.uint8)
             except Exception as e:
                 st.error(f"Error: {e}")
                 filtered_image = noisy_image
-
                 
     # Display results
     if "filtered_image" in locals():
