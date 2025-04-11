@@ -6,7 +6,7 @@ import torch
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
-from DnCNN_filter import load_image, load_dncnn_model, denoise_image
+
 
 st.title("Image Denoising Evaluation with Streamlit")
 
@@ -58,8 +58,7 @@ if original_file and noisy_file:
         "Anisotropic Diffusion", 
         "Median Filter", 
         "Bilateral Filter",
-        "Gaussian Filter",
-        "DnCNN (Deep Learning) Denoising"
+        "Gaussian Filter"
     ])
 
     if filter_choice == "Butterworth Low-Pass":
@@ -93,20 +92,6 @@ if original_file and noisy_file:
         if st.button("Apply Filter"):
             filtered_image = gaussian_filter(noisy_image, filter_size, sigma)
 
-    elif filter_choice == "DnCNN (Deep Learning) Denoising":
-        model_path = "model.pth"  # Path to your trained model
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        if st.button("Apply DnCNN Model"):
-            try:
-                model = load_dncnn_model(model_path, device)
-                noisy_tensor, _ = load_image(noisy_file)
-                filtered_image = denoise_image(model, noisy_tensor, device)
-                filtered_image = filtered_image.cpu().numpy().transpose(1, 2, 0)
-                filtered_image = (filtered_image * 255).astype(np.uint8)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                filtered_image = noisy_image  # Return noisy if error
 
     # Display results
     if "filtered_image" in locals():
