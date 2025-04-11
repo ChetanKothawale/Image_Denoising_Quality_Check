@@ -251,14 +251,19 @@ def high_pass_filter_frequency(image_array, cutoff=0.1):
         f_transform = np.fft.fft2(image_channel)
         f_shifted = np.fft.fftshift(f_transform)
         rows, cols = image_channel.shape
-        r = np.fft.fftfreq(rows)
-        c = np.fft.fftfreq(cols)
-        r, c = np.meshgrid(r, c)
-        mask = np.sqrt(r**2 + c**2) > cutoff
-        f_shifted *= mask
+    
+        # Ensure r and c match the image shape
+        r = np.fft.fftfreq(rows).reshape(-1, 1)  # Column vector
+        c = np.fft.fftfreq(cols).reshape(1, -1)  # Row vector
+    
+        mask = np.sqrt(r**2 + c**2) > cutoff  # Ensure correct shape
+        f_shifted *= mask  # Apply mask correctly
+    
         f_ishifted = np.fft.ifftshift(f_shifted)
         filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
+    
         return np.clip(filtered_channel, 0, 255).astype(np.uint8)
+
     
     if len(image_array.shape) == 3:  # RGB Image
         return np.stack([filter_channel(image_array[:, :, i]) for i in range(3)], axis=-1)
