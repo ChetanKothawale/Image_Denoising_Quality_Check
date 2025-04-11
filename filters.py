@@ -245,46 +245,22 @@ def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
 #         return apply_high_pass_filter(image_array, cutoff)
 
 
-
-
-def high_pass_filter_frequency(image_array, cutoff=0.1):
-    """Apply high-pass filter to an image (either single channel or multi-channel)."""
-    if len(image_array.shape) == 3:
-        # Process each channel separately for RGB images
-        filtered_channels = []
-        for channel in range(3):
-            # Apply FFT and shift
-            f_transform = np.fft.fft2(image_array[:, :, channel])
-            f_shifted = np.fft.fftshift(f_transform)
-            
-            # Create high-pass mask
-            rows, cols = image_array.shape[:2]
-            r = np.fft.fftfreq(rows)
-            c = np.fft.fftfreq(cols)
-            r, c = np.meshgrid(r, c)
-            mask = np.sqrt(r**2 + c**2) > cutoff
-            
-            # Apply mask and inverse transform
-            f_shifted *= mask
-            f_ishifted = np.fft.ifftshift(f_shifted)
-            filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
-            
-            filtered_channels.append(np.clip(filtered_channel, 0, 255).astype(np.uint8))
-        
-        return np.stack(filtered_channels, axis=-1)
-    else:
-        # Process single channel image
-        f_transform = np.fft.fft2(image_array)
+def apply_high_pass_filter(image_array, cutoff=0.1):
+    """Apply High-pass filter to an image (grayscale or RGB)."""
+    def filter_channel(image_channel):
+        f_transform = np.fft.fft2(image_channel)
         f_shifted = np.fft.fftshift(f_transform)
-        
-        rows, cols = image_array.shape
+        rows, cols = image_channel.shape
         r = np.fft.fftfreq(rows)
         c = np.fft.fftfreq(cols)
         r, c = np.meshgrid(r, c)
         mask = np.sqrt(r**2 + c**2) > cutoff
-        
         f_shifted *= mask
         f_ishifted = np.fft.ifftshift(f_shifted)
         filtered_channel = np.abs(np.fft.ifft2(f_ishifted))
-        
         return np.clip(filtered_channel, 0, 255).astype(np.uint8)
+    
+    if len(image_array.shape) == 3:  # RGB Image
+        return np.stack([filter_channel(image_array[:, :, i]) for i in range(3)], axis=-1)
+    else:  # Grayscale Image
+        return filter_channel(image_array)
