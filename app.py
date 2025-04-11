@@ -16,6 +16,18 @@ with col1:
 with col2:
     noisy_file = st.file_uploader("Upload Noisy Image", type=["png", "jpg", "jpeg"])
 
+
+# Load Deep Learning Models
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load GAN model
+gan_model_path = "generator_model.pth"
+try:
+    gan_model = load_gan_model(gan_model_path)
+    st.success("GAN Model Loaded Successfully")
+except Exception as e:
+    st.error(f"Error loading GAN model: {e}")
+
 if original_file and noisy_file:
     original_image = imageio.imread(original_file)
     noisy_image = imageio.imread(noisy_file)
@@ -51,16 +63,7 @@ if original_file and noisy_file:
     else:
         st.warning("Original and noisy images must have the same dimensions for comparison")
   
-    # Load Deep Learning Models
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    # Load GAN model
-    gan_model_path = "generator_model.pth"
-    try:
-        gan_model = load_gan_model(gan_model_path)
-        st.success("GAN Model Loaded Successfully")
-    except Exception as e:
-        st.error(f"Error loading GAN model: {e}")
+
 
     denoise_choice = st.selectbox(
         "Choose a Denoising Method",
