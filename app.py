@@ -125,7 +125,7 @@ if original_file and noisy_file:
             try:
                 noisy_tensor = preprocess_image(noisy_file)
                 denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-                filtered_image = denoised_tensor.detach().cpu().numpy().transpose(1, 2, 0)
+                filtered_image = denoised_tensor.numpy().transpose(1, 2, 0)
                 filtered_image = (filtered_image * 255).astype(np.uint8)
             except Exception as e:
                 st.error(f"Error: {e}")
