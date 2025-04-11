@@ -134,10 +134,30 @@ if original_file and noisy_file:
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
             try:
+                # Preprocess the noisy image
                 noisy_tensor = preprocess_image(noisy_file)
+                
+                # Denoise using GAN (ensure this returns a tensor on CPU)
                 denoised_tensor = gan_denoise_image(gan_model, noisy_tensor)
-                filtered_image = denoised_tensor.cpu().numpy().transpose(1, 2, 0)
-                filtered_image = (filtered_image * 255).astype(np.uint8)
+                
+                # Convert tensor to numpy array properly
+                if torch.is_tensor(denoised_tensor):
+                    if denoised_tensor.is_cuda:
+                        denoised_tensor = denoised_tensor.cpu()
+                    filtered_image = denoised_tensor.numpy()
+                
+                # Handle different tensor formats (NCHW to HWC)
+                if filtered_image.ndim == 4:  # batch dimension
+                    filtered_image = filtered_image[0]
+                if filtered_image.shape[0] in [1, 3]:  # CHW format
+                    filtered_image = filtered_image.transpose(1, 2, 0)
+                
+                # Scale to 0-255 if needed
+                if filtered_image.max() <= 1.0:
+                    filtered_image = (filtered_image * 255).astype(np.uint8)
+                else:
+                    filtered_image = filtered_image.astype(np.uint8)
+                    
             except Exception as e:
                 st.error(f"Error: {e}")
                 filtered_image = noisy_image
